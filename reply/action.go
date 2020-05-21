@@ -1,16 +1,12 @@
 package reply
 
-type Action struct {
-	Label string `json:"label"`
-}
-
 type PostbackAction struct {
-	Action
+	Label       string `json:"label"`
 	Data        string `json:"data"`
 	DisplayText string `json:"displayText,omitempty"`
 }
 
 type UriAction struct {
-	Action
-	Uri string `json:"uri"`
+	Label string `json:"label"`
+	Uri   string `json:"uri"`
 }

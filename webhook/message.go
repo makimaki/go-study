@@ -11,8 +11,8 @@ type TextMessage struct {
 
 type LocationMessage struct {
 	Message
-	Title     string `json:",omitempty"`
-	Address   string `json:",omitempty"`
+	Title     *string `json:",omitempty"`
+	Address   *string `json:",omitempty"`
 	Latitude  float64
 	Longitude float64
 }

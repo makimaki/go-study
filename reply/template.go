@@ -1,6 +1,6 @@
 package reply
 
-type ButtonTemplate struct {
+type ButtonsTemplate struct {
 	Text    string        `json:"text"`
 	Actions []interface{} `json:"actions"`
 }

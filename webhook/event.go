@@ -5,15 +5,11 @@ import (
 	"log"
 )
 
-type Event struct {
+type MessageEvent struct {
 	Timestamp  int64
 	Source     interface{}
 	ReplyToken string
-}
-
-type MessageEvent struct {
-	Event
-	Message interface{}
+	Message    interface{}
 }
 
 func (this *MessageEvent) UnmarshalJSON(b []byte) error {
@@ -59,8 +55,10 @@ func (this *MessageEvent) UnmarshalJSON(b []byte) error {
 }
 
 type PostbackEvent struct {
-	Event
-	Postback struct {
+	Timestamp  int64
+	Source     interface{}
+	ReplyToken string
+	Postback   struct {
 		Data string
 	}
 }
