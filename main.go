@@ -233,7 +233,6 @@ func handleEvent(e interface{}, res **reply.Request) error {
 }
 
 func sendReply(config LineConfig, replyRequest reply.Request) error {
-	// TODO 各オブジェクトに type を入れる
 	buf, err := json.Marshal(replyRequest)
 
 	if err != nil {
