@@ -20,94 +20,21 @@ import (
 type LineConfig struct {
 	ChannelAccessToken string `envconfig:"CHANNEL_ACCESS_TOKEN"`
 	ChannelSecret      string `envconfig:"CHANNEL_SECRET"`
+	ReplyApiEndpoint   string `envconfig:"REPLY_API_ENDPOINT"`
 }
 
 const (
 	SIGNATURE_HEADER_NAME = "X-Line-Signature"
-	REPLY_API_ENDPOINT    = "https://api.line.me/v2/bot/message/reply"
 )
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
+	r.GET("/status", func(c *gin.Context) {
+		c.String(http.StatusOK, "ok")
 	})
 	r.POST("/webhook/:clientId/:integrationId", handleWebhook)
 
 	r.Run()
-
-	// request := `{
-	// 	"events": [
-	// 		{
-	// 			"type": "message",
-	// 			"timestamp": 1589347982,
-	// 			"source": {
-	// 				"type": "user",
-	// 				"userId": "Uaaaa1"
-	// 			},
-	// 			"replyToken": "pleasereply",
-	// 			"message": {
-	// 				"type": "text",
-	// 				"id": "text0001",
-	// 				"text": "hoaaaaa"
-	// 			}
-	// 		},
-	// 		{
-	// 			"type": "message",
-	// 			"timestamp": 1589347982,
-	// 			"source": {
-	// 				"type": "user",
-	// 				"userId": "Uaaaa2"
-	// 			},
-	// 			"replyToken": "pleasereply",
-	// 			"message": {
-	// 				"type": "location",
-	// 				"id": "loc0001",
-	// 				"title": "大日本帝国",
-	// 				"address": "日本列島",
-	// 				"latitude": 35.362810,
-	// 				"longitude": 138.731006
-	// 			}
-	// 		},
-	// 		{
-	// 			"type": "message",
-	// 			"timestamp": 1589347982,
-	// 			"source": {
-	// 				"type": "user",
-	// 				"userId": "Uaaaa3"
-	// 			},
-	// 			"replyToken": "pleasereply",
-	// 			"message": {
-	// 				"type": "location",
-	// 				"id": "loc0002",
-	// 				"latitude": 19.207428,
-	// 				"longitude": -155.566406
-	// 			}
-	// 		},
-	// 		{
-	// 			"type": "postback",
-	// 			"timestamp": 1589347982,
-	// 			"source": {
-	// 				"type": "user",
-	// 				"userId": "Uaaaa4"
-	// 			},
-	// 			"replyToken": "pleasereply",
-	// 			"postback": {
-	// 				"data": "test"
-	// 			}
-	// 		},
-	// 		{
-	// 			"type": "follow",
-	// 			"timestamp": 1589347982,
-	// 			"source": {
-	// 				"type": "user",
-	// 				"userId": "Uaaaa5"
-	// 			}
-	// 		}
-	// 	]
-	// }`
 }
 
 func handleWebhook(c *gin.Context) {
@@ -129,16 +56,13 @@ func handleWebhook(c *gin.Context) {
 		c.GetHeader(SIGNATURE_HEADER_NAME),
 		body,
 	) {
-		log.Fatal(errors.New("aaaa"))
+		log.Fatal(errors.New("invalid request"))
 	}
 
 	var req webhook.Request
 	if err := json.Unmarshal([]byte(body), &req); err != nil {
 		log.Fatal(err)
 	}
-	// if err := c.BindJSON(&req); err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	for _, event := range req.Events {
 		var res *reply.Request
@@ -146,7 +70,12 @@ func handleWebhook(c *gin.Context) {
 			log.Fatal(err)
 		}
 		if res != nil {
-			sendReply(lineConfig, *res)
+			if lineConfig.ReplyApiEndpoint == "direct" {
+				c.JSON(http.StatusOK, *res)
+			} else {
+				sendReply(lineConfig, *res)
+				c.Status(http.StatusOK)
+			}
 		}
 	}
 }
@@ -240,10 +169,11 @@ func sendReply(config LineConfig, replyRequest reply.Request) error {
 	}
 
 	log.Printf("json:\n%s\n\n", buf)
+	log.Printf("replyto: %s", config.ReplyApiEndpoint)
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		REPLY_API_ENDPOINT,
+		config.ReplyApiEndpoint,
 		bytes.NewBuffer(buf),
 	)
 
